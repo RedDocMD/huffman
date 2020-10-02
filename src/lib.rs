@@ -177,16 +177,25 @@ impl HuffmanCode {
         }
     }
 
-    pub fn encode(&self, message: &str) -> Vec<u8> {
+    pub fn encode(&self, message: &str) -> Option<Vec<u8>> {
         let mut encoded = Vec::new();
         for symbol in message.chars() {
-            encoded.append(&mut self.code[&symbol].clone());
+            match self.code.get(&symbol) {
+                Some(vec) => {
+                    encoded.append(&mut vec.clone());
+                }
+                None => return None,
+            }
         }
-        encoded
+        Some(encoded)
     }
 
-    pub fn encode_char(&self, sym: char) -> Vec<u8> {
-        self.code[&sym].clone()
+    pub fn encode_char(&self, sym: char) -> Option<Vec<u8>> {
+        if let Some(vec) = &mut self.code.get(&sym) {
+            Some(vec.clone())
+        } else {
+            None
+        }
     }
 }
 
@@ -312,7 +321,7 @@ mod test {
         let huffman_code = generate_huffman_code(&freqs, &symbols);
 
         let message = "toastie";
-        let encoded = huffman_code.encode(message);
+        let encoded = huffman_code.encode(message).unwrap();
         let expected_encoded = vec![0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0];
 
         assert_eq!(encoded, expected_encoded);

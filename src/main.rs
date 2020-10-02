@@ -30,17 +30,20 @@ fn encode_file(inp_filename: &str, out_filename: &str, code: &huffman::HuffmanCo
     let mut buf_reader = BufReader::new(input_file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
-    // for character in contents.chars() {
-    //     output_file.write(&code.encode_char(character))?;
-    // }
-    let lines = contents.split('\n');
-    for line in lines {
-        let line_string = String::from(line);
-        let words = line_string.split(' ');
-        for word in words {
-            output_file.write(&code.encode(word))?;
-            output_file.write(b" ")?;
+    let mut buf = Vec::new();
+    for character in contents.chars() {
+        if let Some(vec) = &mut code.encode_char(character) {
+            buf.append(vec);
         }
     }
+    // let lines = contents.split('\n');
+    // for line in lines {
+    //     let line_string = String::from(line);
+    //     let words = line_string.split(' ');
+    //     for word in words {
+    //         output_file.write(&code.encode(word))?;
+    //         // output_file.write(b" ")?;
+    //     }
+    // }
     Ok(())
 }
