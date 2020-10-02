@@ -42,7 +42,8 @@ fn encode_file(
         }
     }
 
-    let mut buf: Vec<u8> = vec![0; 10];
+    const BUF_SIZE: usize = 10;
+    let mut buf: Vec<u8> = vec![0; BUF_SIZE];
     let mut buf_idx = 0;
     let mut bin_idx = 0;
     let mut byte: u8 = 0;
@@ -52,10 +53,10 @@ fn encode_file(
             byte = 0;
             buf_idx += 1;
         }
-        if buf_idx == 10 {
+        if buf_idx == BUF_SIZE {
             output_file.write(&buf)?;
             buf_idx = 0;
-            for i in 0..10 {
+            for i in 0..BUF_SIZE {
                 buf[i] = 0;
             }
         }
