@@ -23,9 +23,11 @@ pub fn get_frequencies(filename: &str) -> Result<HashMap<char, usize>, Box<dyn E
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     let lines = contents.split('\n');
-    for (i, line) in lines.enumerate() {
-        if i > 0 {
-            update_frequencies(&String::from(line).to_ascii_lowercase(), &mut freqs);
+    for line in lines {
+        let line_string = String::from(line);
+        let words = line_string.split(' ');
+        for word in words {
+            update_frequencies(&String::from(word).to_ascii_lowercase(), &mut freqs);
         }
     }
     Ok(freqs)
@@ -172,6 +174,14 @@ impl HuffmanCode {
             tree,
             symbols,
         }
+    }
+
+    pub fn encode(&self, message: &str) -> String {
+        let mut encoded = String::new();
+        for symbol in message.chars() {
+            encoded.push_str(&self.code[&symbol]);
+        }
+        encoded
     }
 }
 
