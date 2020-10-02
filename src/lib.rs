@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fs::File;
+use std::io::BufReader;
 use std::io::prelude::*;
 
 fn update_frequencies(word: &str, freqs: &mut HashMap<char, usize>) {
@@ -19,9 +20,10 @@ fn update_frequencies(word: &str, freqs: &mut HashMap<char, usize>) {
 
 pub fn get_frequencies(filename: &str) -> Result<HashMap<char, usize>, Box<dyn Error>> {
     let mut freqs = HashMap::new();
-    let mut file = File::open(filename)?;
+    let file = File::open(filename)?;
+    let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
+    buf_reader.read_to_string(&mut contents)?;
     let lines = contents.split('\n');
     for line in lines {
         let line_string = String::from(line);
