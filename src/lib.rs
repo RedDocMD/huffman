@@ -285,4 +285,25 @@ mod test {
 
         assert_eq!(huffman_code.code, expected_codes);
     }
+
+    #[test]
+    fn test_huffman_encoding() {
+        let mut freqs = HashMap::new();
+
+        freqs.insert('a', 25);
+        freqs.insert('e', 40);
+        freqs.insert('i', 23);
+        freqs.insert('o', 11);
+        freqs.insert('s', 26);
+        freqs.insert('t', 27);
+
+        let symbols = vec!['a', 'e', 'i', 'o', 's', 't'];
+        let huffman_code = generate_huffman_code(&freqs, &symbols);
+
+        let message = "toastie";
+        let encoded = huffman_code.encode(message);
+        let expected_encoded = String::from("000101101110001110");
+
+        assert_eq!(encoded, expected_encoded);
+    }
 }
