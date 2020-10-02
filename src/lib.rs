@@ -184,6 +184,10 @@ impl HuffmanCode {
         }
         encoded
     }
+
+    pub fn encode_char(&self, sym: char) -> Vec<u8> {
+        self.code[&sym].clone()
+    }
 }
 
 impl fmt::Display for HuffmanCode {
