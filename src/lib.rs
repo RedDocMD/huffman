@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
 
 fn update_frequencies(word: &str, freqs: &mut HashMap<char, usize>) {
     for c in word.chars() {
@@ -139,21 +139,20 @@ fn generate_huffman_tree(freqs: &HashMap<char, usize>, symbols: &[char]) -> Huff
 
 fn huffman_code_recursive(
     root: &HuffmanNode,
-    code_map: &mut HashMap<char, String>,
-    partial_code: &str,
+    code_map: &mut HashMap<char, Vec<u8>>,
+    partial_code: &mut Vec<u8>,
 ) {
     if root.is_internal() {
-        let mut new_code = String::from(partial_code);
-        new_code.push('0');
-        huffman_code_recursive(root.left.as_ref().unwrap(), code_map, &new_code);
-        new_code.pop();
-        new_code.push('1');
-        huffman_code_recursive(root.right.as_ref().unwrap(), code_map, &new_code);
-        new_code.pop();
+        partial_code.push(0);
+        huffman_code_recursive(root.left.as_ref().unwrap(), code_map, partial_code);
+        partial_code.pop();
+        partial_code.push(1);
+        huffman_code_recursive(root.right.as_ref().unwrap(), code_map, partial_code);
+        partial_code.pop();
     } else {
         match root.label {
             Label::Character(ch) => {
-                code_map.insert(ch, String::from(partial_code));
+                code_map.insert(ch, partial_code.clone());
             }
             Label::Number(_) => {
                 panic!("Incorrect tree!");
@@ -165,12 +164,12 @@ fn huffman_code_recursive(
 #[derive(Debug)]
 pub struct HuffmanCode {
     tree: HuffmanCodeTree,
-    code: HashMap<char, String>,
+    code: HashMap<char, Vec<u8>>,
     symbols: Vec<char>,
 }
 
 impl HuffmanCode {
-    pub fn new(tree: HuffmanCodeTree, code: HashMap<char, String>, symbols: Vec<char>) -> Self {
+    pub fn new(tree: HuffmanCodeTree, code: HashMap<char, Vec<u8>>, symbols: Vec<char>) -> Self {
         HuffmanCode {
             code,
             tree,
@@ -178,10 +177,10 @@ impl HuffmanCode {
         }
     }
 
-    pub fn encode(&self, message: &str) -> String {
-        let mut encoded = String::new();
+    pub fn encode(&self, message: &str) -> Vec<u8> {
+        let mut encoded = Vec::new();
         for symbol in message.chars() {
-            encoded.push_str(&self.code[&symbol]);
+            encoded.append(&mut self.code[&symbol].clone());
         }
         encoded
     }
@@ -190,7 +189,15 @@ impl HuffmanCode {
 impl fmt::Display for HuffmanCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for symbol in &self.symbols {
-            writeln!(f, "{} = {}", *symbol, self.code[symbol])?;
+            let mut code = String::new();
+            for val in &self.code[symbol] {
+                if *val == 1 {
+                    code.push('1');
+                } else if *val == 0 {
+                    code.push('0');
+                }
+            }
+            writeln!(f, "{} = {}", *symbol, code)?;
         }
         Ok(())
     }
@@ -199,7 +206,7 @@ impl fmt::Display for HuffmanCode {
 pub fn generate_huffman_code(freqs: &HashMap<char, usize>, symbols: &[char]) -> HuffmanCode {
     let tree = generate_huffman_tree(&freqs, symbols);
     let mut code_map = HashMap::new();
-    huffman_code_recursive(&tree.root, &mut code_map, "");
+    huffman_code_recursive(&tree.root, &mut code_map, &mut Vec::new());
     let mut symbols_copy = Vec::new();
     symbols_copy.extend_from_slice(symbols);
     HuffmanCode::new(tree, code_map, symbols_copy)
@@ -273,13 +280,13 @@ mod test {
 
         let symbols = vec!['a', 'e', 'i', 'o', 's', 't'];
 
-        let mut expected_codes = HashMap::new();
-        expected_codes.insert('e', String::from("10"));
-        expected_codes.insert('a', String::from("110"));
-        expected_codes.insert('i', String::from("011"));
-        expected_codes.insert('o', String::from("010"));
-        expected_codes.insert('s', String::from("111"));
-        expected_codes.insert('t', String::from("00"));
+        let mut expected_codes = HashMap::<char, Vec<u8>>::new();
+        expected_codes.insert('e', vec![1, 0]);
+        expected_codes.insert('a', vec![1, 1, 0]);
+        expected_codes.insert('i', vec![0, 1, 1]);
+        expected_codes.insert('o', vec![0, 1, 0]);
+        expected_codes.insert('s', vec![1, 1, 1]);
+        expected_codes.insert('t', vec![0, 0]);
 
         let huffman_code = generate_huffman_code(&freqs, &symbols);
 
@@ -302,7 +309,7 @@ mod test {
 
         let message = "toastie";
         let encoded = huffman_code.encode(message);
-        let expected_encoded = String::from("000101101110001110");
+        let expected_encoded = vec![0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0];
 
         assert_eq!(encoded, expected_encoded);
     }
