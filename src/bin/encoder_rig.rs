@@ -61,14 +61,18 @@ fn encode_file(
         if buf_idx == buf_size {
             output_file.write(&buf)?;
             buf_idx = 0;
-            for i in 0..buf_size {
-                buf[i] = 0;
-            }
         }
         byte = (byte << 1) + bin_digits[bin_idx];
         bin_idx += 1;
     }
-    output_file.write(&buf)?;
+    if bin_idx % 8 != 0 {
+        let ceil_mult = (bin_idx / 8 + 1) * 8;
+        let diff = ceil_mult - bin_idx;
+        byte = byte << diff;
+    }
+    buf[buf_idx] = byte;
+    buf_idx += 1;
+    output_file.write(&buf[..buf_idx])?;
     // let lines = contents.split('\n');
     // for line in lines {
     //     let line_string = String::from(line);
