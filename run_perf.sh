@@ -19,7 +19,7 @@ echo "SVG output file: $SVG_NAME"
 
 FLAMEGRAPH_DIR=/home/deep/software/FlameGraph
 
-EXEC=target/release/huffman
+EXEC=target/release/encoder_rig
 
 sudo perf record -o $PERF_DATA_FILE -g --call-graph dwarf $EXEC $BUF_SIZE $INPUT_FILE_NAME $OUTPUT_FILE_NAME
 sudo perf script -i $PERF_DATA_FILE | $FLAMEGRAPH_DIR/stackcollapse-perf.pl | $FLAMEGRAPH_DIR/flamegraph.pl > $SVG_NAME
