@@ -1,12 +1,16 @@
 use huffman;
+use std::env;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let data_filename = "data/giant.txt";
-    let frequencies = huffman::get_frequencies(data_filename)?;
+    let args: Vec<String> = env::args().collect();
+    let buf_size: usize = args[1].trim().parse().expect("Buf size must be an integer");
+    let input_file_name = &args[2];
+    let output_file_name = &args[3];
+    let frequencies = huffman::get_frequencies(input_file_name)?;
 
     let mut symbols: Vec<char> = ('a'..(('z' as u8 + 1) as char)).collect();
     symbols.push(' ');
@@ -16,9 +20,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     // symbols.append(&mut digits);
 
     let huffman_code = huffman::generate_huffman_code(&frequencies, &symbols);
-    println!("Huffman encoding:\n{}", huffman_code);
+    // println!("Huffman encoding:\n{}", huffman_code);
+    println!("Generated Huffman code.");
     println!("Creating encoded file...");
-    encode_file("data/giant.txt", "data/giant.huff", &huffman_code)?;
+    encode_file(input_file_name, output_file_name, &huffman_code, buf_size)?;
     println!("... created encoded file");
 
     Ok(())
@@ -28,6 +33,7 @@ fn encode_file(
     inp_filename: &str,
     out_filename: &str,
     code: &huffman::HuffmanCode,
+    buf_size: usize,
 ) -> Result<(), Box<dyn Error>> {
     let input_file = File::open(inp_filename)?;
     let mut output_file = File::create(out_filename)?;
@@ -42,8 +48,7 @@ fn encode_file(
         }
     }
 
-    const BUF_SIZE: usize = 10;
-    let mut buf: Vec<u8> = vec![0; BUF_SIZE];
+    let mut buf: Vec<u8> = vec![0; buf_size];
     let mut buf_idx = 0;
     let mut bin_idx = 0;
     let mut byte: u8 = 0;
@@ -53,10 +58,10 @@ fn encode_file(
             byte = 0;
             buf_idx += 1;
         }
-        if buf_idx == BUF_SIZE {
+        if buf_idx == buf_size {
             output_file.write(&buf)?;
             buf_idx = 0;
-            for i in 0..BUF_SIZE {
+            for i in 0..buf_size {
                 buf[i] = 0;
             }
         }
